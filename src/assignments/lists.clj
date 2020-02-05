@@ -214,9 +214,11 @@
   "Calculate all the points around the origin
   [-1 -1] [0 -1] [1 -1] etc. There should be 8 points
   Note this is a def, not a defn"
-  (for [x (range -1 2)
-        y (range -1 2)]
-    [x y]))
+  (remove
+    #(= [0 0] %)
+    (for [x (take 3 (range -1 2))
+          y (take 3 (range -1 2))]
+      [x y])))
 
 (defn cross-product
   "Given two sequences, generate every combination in the sequence
@@ -339,4 +341,9 @@
   "Given a 9 by 9 sudoku grid, validate it."
   {:level        :hard
    :implemented? false}
-  [grid])
+  [grid]
+  (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) grid)
+    (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) (map set (map vec grid)))
+      true
+      false)
+    false))
