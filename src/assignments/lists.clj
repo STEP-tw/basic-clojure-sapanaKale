@@ -133,7 +133,16 @@
    :use          '[lazy-seq set conj let :optionally letfn]
    :dont-use     '[loop recur distinct]
    :implemented? false}
-  [coll])
+  [coll]
+  (letfn [(add-distinct [distinct-elements coll]
+            (when-let [coll (seq coll)]
+              (lazy-seq
+                (if (distinct-elements (first coll))
+                  (add-distinct distinct-elements (rest coll))
+                  (cons (first coll)
+                        (add-distinct (conj distinct-elements (first coll)) (rest coll))))))
+            )]
+    (add-distinct #{} coll)))
 
 (defn dedupe'
   "Implement your own lazy sequence version of dedupe which returns
@@ -144,7 +153,14 @@
    :dont-use     '[loop recur dedupe]
    :implemented? false}
   [coll]
-  )
+  (letfn [(remove-consecutive-duplicates [last-number coll]
+            (when-let [coll (seq coll)]
+              (lazy-seq
+                (if (= last-number (first coll))
+                  (remove-consecutive-duplicates last-number (rest coll))
+                  (cons (first coll)
+                        (remove-consecutive-duplicates (first coll) (rest coll)))))))]
+    (remove-consecutive-duplicates nil coll)))
 
 (defn sum-of-adjacent-digits
   "Given a collection, returns a map of the sum of adjacent digits.
