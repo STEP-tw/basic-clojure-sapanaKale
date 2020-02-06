@@ -47,11 +47,7 @@
    :dont-use     '[reduce]
    :implemented? true}
   ([f coll]
-   (loop [coll coll result (f)]
-     (if coll
-       (recur (next coll)
-              (f result (first coll)))
-       result)))
+   (reduce' f (f) coll))
   ([f init coll]
    (loop [coll coll result init]
      (if coll
@@ -132,7 +128,7 @@
   {:level        :medium
    :use          '[lazy-seq set conj let :optionally letfn]
    :dont-use     '[loop recur distinct]
-   :implemented? false}
+   :implemented? true}
   [coll]
   (letfn [(add-distinct [distinct-elements coll]
             (when-let [coll (seq coll)]
@@ -151,7 +147,7 @@
   {:level        :medium
    :use          '[lazy-seq conj let :optionally letfn]
    :dont-use     '[loop recur dedupe]
-   :implemented? false}
+   :implemented? true}
   [coll]
   (letfn [(remove-consecutive-duplicates [last-number coll]
             (when-let [coll (seq coll)]
@@ -300,6 +296,10 @@
   [coll nesting-factor]
   (mapv #(last (take nesting-factor (iterate vector %))) coll))
 
+(defn split-into-two
+  [coll]
+  (split-at (quot (count coll) 2) coll))
+
 (defn split-comb
   "Given a collection, return a new sequence where the first
   half of the sequence is interleaved with the second half.
@@ -311,8 +311,11 @@
    :dont-use     '[loop recur map-indexed take drop]
    :implemented? true}
   [coll]
-  (let [split-coll (split-at (- (/ (count coll) 2) (rem (count coll) 2)) coll)]
-    (concat (interleave (first split-coll) (last split-coll)) (take-last (rem (count coll) 2) coll))))
+  (let [first-half (first (split-into-two coll))
+        last-half (last (split-into-two coll))]
+    (if (odd? (count coll))
+      (concat (interleave first-half last-half) (take-last 1 coll))
+      (interleave first-half last-half))))
 
 (defn muted-thirds
   "Given a sequence of numbers, make every third element
@@ -356,7 +359,7 @@
 (defn validate-sudoku-grid
   "Given a 9 by 9 sudoku grid, validate it."
   {:level        :hard
-   :implemented? false}
+   :implemented? true}
   [grid]
   (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) grid)
     (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) (map set (map vec grid)))
