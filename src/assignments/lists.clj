@@ -13,13 +13,11 @@
     (let [map! (fn [f coll]
                  (loop [coll coll result []]
                    (if coll
-                     (recur (next coll)
-                            (conj result (f (first coll))))
-                     result)))]
+                       (recur (next coll) (conj result (f (first coll))))
+                       result)))]
       (if (every? (comp not nil?) coll)
-        (recur (map! next coll)
-               (conj result (apply f (map! first coll))))
-        result))))
+          (recur (map! next coll) (conj result (apply f (map! first coll))))
+          result))))
 
 (defn filter'
   "Implement a non-lazy version of filter that accepts a
@@ -32,11 +30,11 @@
   [pred coll]
   (loop [coll coll result []]
     (if coll
-      (recur (next coll)
-             (if (pred (first coll))
-               (conj result (first coll))
-               result))
-      result)))
+        (recur (next coll)
+               (if (pred (first coll))
+                   (conj result (first coll))
+                   result))
+        result)))
 
 (defn reduce'
   "Implement your own multi-arity version of reduce
@@ -51,9 +49,8 @@
   ([f init coll]
    (loop [coll coll result init]
      (if coll
-       (recur (next coll)
-              (f result (first coll)))
-       result))))
+         (recur (next coll) (f result (first coll)))
+         result))))
 
 (defn count'
   "Implement your own version of count that counts the
@@ -65,9 +62,8 @@
   ([coll]
    (loop [coll coll result 0]
      (if (not-empty coll)
-       (recur (next coll)
-              (inc result))
-       result))))
+         (recur (next coll) (inc result))
+         result))))
 
 (defn reverse'
   "Implement your own version of reverse that reverses a coll.
@@ -89,10 +85,9 @@
    :implemented? true}
   [pred coll]
   (loop [coll coll result true]
-    (if (and result (not (empty? coll)))
-      (recur (next coll)
-             (and result (pred (first coll))))
-      result)))
+    (if (and result (seq coll))
+        (recur (next coll) (and result (pred (first coll))))
+        result)))
 
 (defn some?'
   "Implement your own version of some that checks if at least one
@@ -105,12 +100,10 @@
    :implemented? true}
   [pred coll]
   (loop [coll coll result false]
-    (if (not (empty? coll))
-      (if result
+    (if (empty? coll)
         result
-        (recur (next coll)
-               (or result (pred (first coll)))))
-      result)))
+        (or result
+            (recur (next coll) (or result (pred (first coll))))))))
 
 (defn ascending?
   "Verify if every element is greater than or equal to its predecessor"
@@ -134,9 +127,9 @@
             (when-let [coll (seq coll)]
               (lazy-seq
                 (if (distinct-elements (first coll))
-                  (add-distinct distinct-elements (rest coll))
-                  (cons (first coll)
-                        (add-distinct (conj distinct-elements (first coll)) (rest coll))))))
+                    (add-distinct distinct-elements (rest coll))
+                    (cons (first coll)
+                          (add-distinct (conj distinct-elements (first coll)) (rest coll))))))
             )]
     (add-distinct #{} coll)))
 
@@ -153,9 +146,9 @@
             (when-let [coll (seq coll)]
               (lazy-seq
                 (if (= last-number (first coll))
-                  (remove-consecutive-duplicates last-number (rest coll))
-                  (cons (first coll)
-                        (remove-consecutive-duplicates (first coll) (rest coll)))))))]
+                    (remove-consecutive-duplicates last-number (rest coll))
+                    (cons (first coll)
+                          (remove-consecutive-duplicates (first coll) (rest coll)))))))]
     (remove-consecutive-duplicates nil coll)))
 
 (defn sum-of-adjacent-digits
@@ -180,8 +173,7 @@
   [coll]
   (apply
     (partial max-key (partial apply +))
-    (map (partial conj [])
-         coll (next coll) (nnext coll))))
+    (map (partial conj []) coll (next coll) (nnext coll))))
 
 ;; transpose is a def. Not a defn.
 (def
@@ -265,13 +257,9 @@
    :use          '[keep-indexed when :optionally map-indexed filter]
    :implemented? true}
   [coll]
-  (keep-indexed
-    #(when
-       (-> (divisible-by 3 %1)
-           (or
-             (divisible-by 5 %1)))
-       %2)
-    coll))
+  (keep-indexed #(when (or (divisible-by 3 %1)
+                           (divisible-by 5 %1)) %2)
+                coll))
 
 (defn sqr-of-the-first
   "Given a collection, return a new collection that contains the
@@ -314,8 +302,8 @@
   (let [first-half (first (split-into-two coll))
         last-half (last (split-into-two coll))]
     (if (odd? (count coll))
-      (concat (interleave first-half last-half) (take-last 1 coll))
-      (interleave first-half last-half))))
+        (concat (interleave first-half last-half) (take-last 1 coll))
+        (interleave first-half last-half))))
 
 (defn muted-thirds
   "Given a sequence of numbers, make every third element
@@ -328,6 +316,15 @@
   [coll]
   (map * coll (cycle [1 1 0])))
 
+(def
+  remove-first-last
+  (comp rest butlast))
+
+(defn
+  first=last?
+  [coll]
+  (= (first coll) (last coll)))
+
 (defn palindrome?
   "Implement a recursive palindrome check of any given sequence"
   {:level        :easy
@@ -337,8 +334,8 @@
   [coll]
   (loop [coll coll result true]
     (if (empty? coll)
-      result
-      (recur (rest (butlast coll)) (and result (= (first coll) (last coll)))))))
+        result
+        (recur (remove-first-last coll) (and result (first=last? coll))))))
 
 (defn index-of
   "index-of takes a sequence and an element and finds the index
@@ -349,20 +346,20 @@
    :dont-use     '[.indexOf memfn]
    :implemented? true}
   [coll n]
-  (loop [coll coll result 0]
-    (if (not (empty? coll))
-      (if (= n (first coll))
-        result
-        (recur (rest coll) (inc result)))
-      -1)))
+  (loop [coll coll current-index 0]
+    (if (empty? coll)
+        -1
+        (if (= n (first coll))
+            current-index
+            (recur (rest coll) (inc current-index))))))
 
 (defn validate-sudoku-grid
   "Given a 9 by 9 sudoku grid, validate it."
   {:level        :hard
    :implemented? true}
   [grid]
-  (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) grid)
-    (if (every? #(= #{1 2 3 4 5 6 7 8 9} (set %)) (map set (map vec grid)))
-      true
-      false)
-    false))
+  (let [valid-sudoku-set? #(= #{1 2 3 4 5 6 7 8 9} (set %))
+        columns (map set (apply map vector grid))
+        rows grid]
+    (and (every? valid-sudoku-set? rows)
+         (every? valid-sudoku-set? columns))))
