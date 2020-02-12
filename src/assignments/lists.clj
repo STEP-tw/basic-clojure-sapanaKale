@@ -246,7 +246,7 @@
   [coll]
   (mapcat (partial repeat 2) coll))
 
-(defn divisible-by
+(defn divisible-by?
   [div num]
   (zero? (rem num div)))
 
@@ -257,8 +257,8 @@
    :use          '[keep-indexed when :optionally map-indexed filter]
    :implemented? true}
   [coll]
-  (keep-indexed #(when (or (divisible-by 3 %1)
-                           (divisible-by 5 %1)) %2)
+  (keep-indexed #(when (or (divisible-by? 3 %1)
+                           (divisible-by? 5 %1)) %2)
                 coll))
 
 (defn sqr-of-the-first
@@ -299,8 +299,7 @@
    :dont-use     '[loop recur map-indexed take drop]
    :implemented? true}
   [coll]
-  (let [first-half (first (split-into-two coll))
-        last-half (last (split-into-two coll))]
+  (let [[first-half last-half] (split-into-two coll)]
     (if (odd? (count coll))
         (concat (interleave first-half last-half) (take-last 1 coll))
         (interleave first-half last-half))))
@@ -353,6 +352,13 @@
             current-index
             (recur (rest coll) (inc current-index))))))
 
+(defn sudoku-sub-grids
+  [grid]
+  (->> grid
+       (map #(partition 3 %))
+       (apply map vector)
+       (map flatten)))
+
 (defn validate-sudoku-grid
   "Given a 9 by 9 sudoku grid, validate it."
   {:level        :hard
@@ -362,4 +368,5 @@
         columns (map set (apply map vector grid))
         rows grid]
     (and (every? valid-sudoku-set? rows)
-         (every? valid-sudoku-set? columns))))
+         (every? valid-sudoku-set? columns)
+         (every? valid-sudoku-set? (sudoku-sub-grids grid)))))
